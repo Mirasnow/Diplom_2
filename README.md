@@ -73,6 +73,7 @@ tests - пакет, содержащий тесты, разделенные по
 **Генерация Allure-отчёта**
 
 > `$ pytest tests.py --alluredir=allure_results`
+
 > `$ allure serve allure_results`
  
  
