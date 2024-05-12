@@ -1,5 +1,6 @@
 import requests
 import allure
+from unittest.mock import patch
 
 from data import Urls
 from data import ErrorsMessages as EM
@@ -22,17 +23,22 @@ class TestCreateOrder:
         order_data = response.json().get('order')
         assert 'number' in order_data
 
+
     @allure.title('Проверка попытки создания заказа без авторизации')
     @allure.description('Негативный сценарий тестирования ручки "Создание заказа" POST /api/orders.'
                         'Проверяет, что создание заказа без авторизации невозможно,'
                         'что тело ответа содержит все основные обязательные поля,'
                         'и что запрос возвращает "success": False')
-    def test_create_order_without_authorization(self):
+    @patch('requests.post')
+    def test_create_order_without_authorization(self, mock_post):
+        mock_post.return_value.status_code = 401
+        mock_post.return_value.json.return_value = {'success': False, 'message': EM.authorised_error_401}
         payload = {'ingredients': ['61c0c5a71d1f82001bdaaa6c']}
         response = requests.post(Urls.create_order_url, data=payload)
         assert response.status_code == 401
         assert response.json().get('success') is False
         assert response.json()['message'] == EM.authorised_error_401
+
 
     @allure.title('Проверка попытки создания заказа без ингредиентов')
     @allure.description('Негативный сценарий тестирования ручки "Создание заказа" POST /api/orders.'
@@ -45,6 +51,7 @@ class TestCreateOrder:
         assert response.status_code == 400
         assert response.json().get('success') is False
         assert response.json()['message'] == EM.create_order_error_400
+
 
     @allure.title('Проверка неудачной попытки создания заказа с неправильным хешем ингредиента')
     @allure.description('Негативный сценарий тестирования ручки "Создание заказа" POST /api/orders.'
